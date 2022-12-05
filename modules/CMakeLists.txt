@@ -8,6 +8,7 @@ add_subdirectory(qspi_io)
 add_subdirectory(spi)
 add_subdirectory(xud)
 add_subdirectory(uart)
+add_subdirectory(sw_pll)
 
 if((${CMAKE_SYSTEM_NAME} STREQUAL XCORE_XS3A) OR (${CMAKE_SYSTEM_NAME} STREQUAL XCORE_XS2A))
     ## Alias the mic array repo library target
@@ -26,6 +27,7 @@ if((${CMAKE_SYSTEM_NAME} STREQUAL XCORE_XS3A) OR (${CMAKE_SYSTEM_NAME} STREQUAL 
             io::spi
             io::uart
             io::xud
+            io::sw_pll
     )
     add_library(io::general ALIAS framework_io_general)
 
