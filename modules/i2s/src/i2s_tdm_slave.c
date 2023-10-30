@@ -80,7 +80,7 @@ void i2s_tdm_slave_tx_16_init(
         1,  /* fsync_len: Does not matter for slave as we only care about edge */
         32, /* word len */
         32, /* ch len */
-        16,  /* ch per frame */
+        8,  /* ch per frame */
         slave_bclk_polarity,
         tdm_post_port_init);
 }
@@ -132,8 +132,18 @@ static void i2s_tdm_slave_deinit_resources(
 void i2s_tdm_slave_tx_16_thread(
         i2s_tdm_ctx_t *ctx)
 {
+    bool out_slot[I2S_TDM_MAX_CH_PER_FRAME];
     uint32_t out_samps[I2S_TDM_MAX_CH_PER_FRAME];
     uint32_t fsync_val = 0;
+
+    out_slot[0] = false;
+    out_slot[1] = false;
+    out_slot[2] = false;
+    out_slot[3] = false;
+    out_slot[4] = true;
+    out_slot[5] = true;
+    out_slot[6] = true;
+    out_slot[7] = true;
 
     while(1) {
         xassert(ctx->num_out == 1);
@@ -174,14 +184,23 @@ void i2s_tdm_slave_tx_16_thread(
         port_set_trigger_time(ctx->p_fsync, port_frame_time + fsync_edge_time);
         
         for (int i=1; i<ctx->ch_per_frame; i++) {
-            port_out(ctx->p_dout[0], bitrev(out_samps[i]));
+            if (out_slot[i] == false){
+                port_in(ctx->p_dout[0]);
+            } else {
+                port_out(ctx->p_dout[0], bitrev(out_samps[i]));
+            }
         }
+
 
         while(1) {
             /* Get frame data and tx */
             ctx->i2s_cbg->send(ctx->i2s_cbg->app_data, ctx->ch_per_frame, (int32_t*)out_samps);
 
-            port_out(ctx->p_dout[0], bitrev(out_samps[0]));
+            if (out_slot[0] == false){
+                port_in(ctx->p_dout[0]);
+            } else {
+                port_out(ctx->p_dout[0], bitrev(out_samps[0]));
+            }
             fsync_val = port_in(ctx->p_fsync);
             fsync_edge_time = port_get_trigger_time(ctx->p_fsync);
             port_set_trigger_time(ctx->p_fsync, fsync_edge_time + port_frame_time);
@@ -193,7 +212,11 @@ void i2s_tdm_slave_tx_16_thread(
             }
 
             for (int i=1; i<ctx->ch_per_frame; i++) {
-                port_out(ctx->p_dout[0], bitrev(out_samps[i]));
+                if (out_slot[i] == false){
+                    port_in(ctx->p_dout[0]);
+                } else {
+                    port_out(ctx->p_dout[0], bitrev(out_samps[i]));
+                }
             }
 
             /* Check for exit condition */
