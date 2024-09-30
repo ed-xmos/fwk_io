@@ -1,6 +1,6 @@
 [submodule "mic_array"]
 	path = modules/mic_array
-	url = git@github.com:xmos/lib_mic_array.git
+	url = git@github.com:ed-xmos/lib_mic_array.git
 [submodule "xud"]
 	path = modules/xud/lib_xud
 	url = git@github.com:xmos/lib_xud.git
